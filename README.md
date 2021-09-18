@@ -65,7 +65,7 @@ class RecordButton(
 
 직접 만들어준 UI이므로 하위 버젼의 안드로이드 API에서는 적용이 안될 수 있다. 이를 위해 AppCompat 키워드를 사용해야한다고 알려준다. 또한 `Record 클래스` 내부에 상태에 따라 버튼의 모양을 변경해주는 `updateIconWithState` 메소드를 정의해줬다.
 
-
+![image](https://user-images.githubusercontent.com/33795856/133890479-554194b1-0ed3-4f45-83ff-8e47384b9b17.png)
 
 따로 정의해준 `RecordButton 클래스` 를 통해 버튼을 구현했다. 초기 상태를 지정해주지 않았기에 첫 번째 사진을 보면 빈칸으로 뜨는 것을 볼 수 있다. 초기 상태를 지정해주기 위해 `MainActivity` 에서 `RecordButton` 과 연결된 변수를 선언하고 해당 클래스에서 정의해준 `updateIconWIthState` 메소드를 사용해서 현재 상태를 업데이트 해줬다. 두 번째 사진에서는 `ic_record` 의 Vector Asset으로 되어 있는 것을 볼 수 있다.
 
