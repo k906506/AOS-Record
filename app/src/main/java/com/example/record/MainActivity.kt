@@ -2,6 +2,9 @@ package com.example.record
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.media.MediaDrmResetException
+import android.media.MediaPlayer
+import android.media.MediaRecorder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 
@@ -11,9 +14,21 @@ class MainActivity : AppCompatActivity() {
         findViewById(R.id.recordButton)
     }
 
-    private val requiredPermissions = arrayOf(Manifest.permission.RECORD_AUDIO)
+    private val requiredPermissions = arrayOf(
+        Manifest.permission.RECORD_AUDIO,
+        Manifest.permission.READ_EXTERNAL_STORAGE
+    )
 
+    private val recordingFilePath: String by lazy {
+        "${externalCacheDir?.absolutePath}/recording.3gp"
+    }
+    private var recorder: MediaRecorder? = null
+    private var player: MediaPlayer? = null
     private var state = State.BEFORE_RECORDING
+        set(value) {
+            field = value
+            recordButton.updateIconWithState(value)
+        }
 
     // 정적변수로 만들어주기 위해 companion 객체 사용
     companion object {
@@ -25,10 +40,22 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         initViews()
         requestAudioPermission()
+        bindViews()
     }
 
     private fun initViews() {
         recordButton.updateIconWithState(state)
+    }
+
+    private fun bindViews() {
+        recordButton.setOnClickListener {
+            when (state) {
+                State.BEFORE_RECORDING -> startRecording()
+                State.ON_RECORDING -> stopRecording()
+                State.AFTER_RECORDING -> startPlaying()
+                State.ON_PALYING -> stopPlaying()
+            }
+        }
     }
 
     private fun requestAudioPermission() {
@@ -47,5 +74,41 @@ class MainActivity : AppCompatActivity() {
         if (!audioRecordPermissionGranted) {
             finish()
         }
+    }
+
+    private fun startRecording() {
+        recorder = MediaRecorder().apply {
+            setAudioSource(MediaRecorder.AudioSource.MIC) // 마이크에 접근
+            setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP) // 포멧 지정
+            setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB) // 인코더 방식 지정
+            setOutputFile(recordingFilePath) // 지정해준 경로에 저장
+            prepare()
+        }
+        recorder?.start()
+        state = State.ON_RECORDING
+    }
+
+    private fun stopRecording() {
+        recorder?.run {
+            stop()
+            release() // 메모리 해제
+        }
+        recorder = null
+        state = State.AFTER_RECORDING
+    }
+
+    private fun startPlaying() {
+        player = MediaPlayer().apply {
+            setDataSource(recordingFilePath)
+            prepare()
+        }
+        player?.start()
+        state = State.ON_PALYING
+    }
+
+    private fun stopPlaying() {
+        player?.release()
+        player = null
+        state = State.AFTER_RECORDING
     }
 }
