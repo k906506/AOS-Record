@@ -317,3 +317,108 @@ MediaRecorder보다 Prepare까지의 과정이 좀 더 간결하다.
     }
 
 ```
+
+![image](https://user-images.githubusercontent.com/33795856/133918424-40b9c52e-5086-4b96-a988-b99feb0f980c.png)
+
+## 4. 오디오 시각화하기
+
+우선 `View` 를 상속하는 `SoundVisualizerView` 클래스를 만들어줬다. 안드로이드의 `onDraw` 메소드를 오버라이딩해서 오디오를 시각화한다. onDraw의 매개변수는 `Canvas` 클래스이다. Canvas 객체는 뷰에서 텍스트, 선, 비트맵 등 다양한 그래픽을 그리기 위한 메소드를 정의한다. 이 부분은 안드로이드 공식 문서에 잘 나와있다. 하지만 그리기 메소드를 호출하기 전에 Paint 객체를 먼저 만들어야한다. **Canvas 클래스가 그리는 내용에 대한 정보를 담고 있다면, Paint 클래스는 그리는 방법에 대한 정보를 담고 있다. 예를 들어 Canvas에는 직사각형을 그리는 메소드가 있고 Paint에는 직사각형을 무슨 색으로 채우는지에 대한 메소드가 있다.**
+
+```kotlin
+	companion object {
+        private const val LINE_WIDTH = 10F
+        private const val LINE_SPACE = 15F
+        private const val MAX_AMPLITUDE = Short.MAX_VALUE.toFloat()
+        private const val ACTION_INTERVAL = 20L
+    }
+
+	// ... 중략
+
+	private val amplitudePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = context.getColor(R.color.purple_500)
+        strokeWidth = LINE_WIDTH
+        strokeCap = Paint.Cap.ROUND
+    }
+```
+
+우선 `Paint` 객체를 만든다. `ANTI_ALIAS_FLAG` 생성자를 통해 객체를 만들고 `apply` 로 속성 값을 정해준다. 이후에 `onDraw` 메소드로 View를 만들어주면 된다. 하지만 그 전에 알아야할 것이 있다. View의 크기이다.
+
+```kotlin
+	private var drawingWidth: Int = 0
+  private var drawingHeight: Int = 0	
+	override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        drawingWidth = w
+        drawingHeight = h
+    }
+```
+
+`onSizeChanged` 를 오버라이딩해서 View의 크기를 가져온다. 이제 우리가 오디오를 시각화할 영역의 크기를 알아냈다. 
+
+### onDraw
+
+```kotlin
+	private var drawingAmplitudes: List<Int> = emptyList()	
+	override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
+
+        canvas ?: return
+
+        val centerY = drawingHeight / 2f
+        var offsetX = drawingWidth.toFloat()
+
+        drawingAmplitudes
+            .let { amplitudes ->
+                if(isReplaying) {
+                    amplitudes.takeLast(replayingPosition)
+                }
+                else {
+                    amplitudes
+                }
+            }
+            .forEach { amplitude ->
+            val lineLength = amplitude / MAX_AMPLITUDE * drawingHeight * 0.8F
+            offsetX -= LINE_SPACE
+            if (offsetX < 0) return@forEach
+
+            canvas.drawLine(
+                offsetX,
+                centerY - lineLength / 2F,
+                offsetX,
+                centerY + lineLength / 2F,
+                amplitudePaint
+            )
+        }
+    }
+```
+
+우선 인코딩된 음성을 저장할 리스트를 선언해줬다. 이후 두 개의 기준점을 만들어줬고 `forEach` 를 통해 저장된 음원을 하나씩 화면에 표시하는 방식으로 진행했다. 일단 좌표죽 개념부터 집고 넘어가자.
+
+![image](https://user-images.githubusercontent.com/33795856/133918454-9874bd5d-7bc1-46bc-882f-0ce85c642a3e.png)
+
+이렇게 좌표가 설정되는데 코드에서 `offsetX` 가 View의 너비로 지정되어 있는 것을 볼 수 있다. 즉, 가장 우측부터 리스트의 원소를 출력하게 된다.
+
+### visualizeRepeatAction
+
+`Runnable` 인터페이스를 이용해서 구현했다.
+
+```kotlin
+	var onRequestCurrentAmplitude: (() -> Int)? = null
+	private val visualizeRepeatAction: Runnable = object : Runnable {
+        override fun run() {
+            if (!isReplaying) {
+                val currentAmplitude = onRequestCurrentAmplitude?.invoke() ?: 0
+                drawingAmplitudes = listOf(currentAmplitude) + drawingAmplitudes
+            } else {
+                replayingPosition++
+            }
+            invalidate()
+            handler?.postDelayed(this, ACTION_INTERVAL)
+        }
+    }
+```
+
+`onRequestCurrentAmplitude` 를 정의해서 함수 값이 반환되도록 구현했는데 이를 `handler` 를 통해 20milliseconds 마다 실행되도록 했다. 즉 20milliseconds 마다 현재 음성의 `maxAmplitude` 를 가져온다. 이후 기존의 음성이 담겨있는 리스트의 맨 앞에 새로운 음성을 추가해줬다. 재생 버튼 위에 있는 녹음 시간 출력 역시 동일하게 `Runnable` 을 사용해서 구현했다.
+
+![image](https://user-images.githubusercontent.com/33795856/133918458-21b0419c-234c-4411-999f-f42651576bfd.png)
+
