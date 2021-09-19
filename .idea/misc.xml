@@ -3,6 +3,10 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/k9065/AndroidStudioProjects/Record/app/src/main/res/drawable/ic_launcher_background.xml" value="0.2713541666666667" />
+        <entry key="..\:/Users/k9065/AndroidStudioProjects/Record/app/src/main/res/drawable/shape_oval_button.xml" value="0.14814814814814814" />
+        <entry key="..\:/Users/k9065/AndroidStudioProjects/Record/app/src/main/res/layout/activity_main.xml" value="0.25" />
+        <entry key="..\:/Users/k9065/AndroidStudioProjects/Record/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.14814814814814814" />
         <entry key="..\:/Users/k9065/flutterProject/Record/app/src/main/res/drawable/ic_play.xml" value="0.22083333333333333" />
         <entry key="..\:/Users/k9065/flutterProject/Record/app/src/main/res/drawable/ic_record.xml" value="0.22083333333333333" />
         <entry key="..\:/Users/k9065/flutterProject/Record/app/src/main/res/layout/activity_main.xml" value="0.33" />
