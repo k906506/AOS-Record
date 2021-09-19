@@ -422,3 +422,4 @@ MediaRecorder보다 Prepare까지의 과정이 좀 더 간결하다.
 
 ![image](https://user-images.githubusercontent.com/33795856/133918458-21b0419c-234c-4411-999f-f42651576bfd.png)
 
+![image](https://user-images.githubusercontent.com/33795856/133918667-4dca0d81-2a6d-4d32-a93c-026b7d560a50.png)
